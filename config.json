@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "exportDate": "2026-06-12T08:22:35.903Z",
+  "cards": [
+    {
+      "id": "mqans3tpf7lzfl2m5",
+      "type": "flashcard",
+      "front": "123",
+      "back": "123",
+      "box": 1,
+      "nextReview": null,
+      "lastReview": null,
+      "reviewCount": 0,
+      "createdAt": 1781252555101
+    }
+  ],
+  "history": {
+    "2026-06-11": {
+      "reviewed": 1,
+      "mastered": 0,
+      "blurry": 1,
+      "forget": 0
+    }
+  }
+}
