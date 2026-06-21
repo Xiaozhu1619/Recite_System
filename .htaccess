@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# 处理API请求
+RewriteRule ^api/(.*)$ api.php [L,QSA]
+
+# 处理静态文件
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.html [L]

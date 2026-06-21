@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>考研背诵系统</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -16,6 +20,60 @@
   --border:#2d2d4a;--glow:0 0 20px rgba(124,58,237,.3);
   --radius:16px;--radius-sm:10px;
 }
+
+/* Login Page */
+.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;transition:opacity .6s ease,transform .6s ease}
+.login-overlay.hiding{opacity:0;transform:scale(0.95)}
+.login-overlay.hidden{display:none}
+.login-container{width:100%;max-width:420px;padding:20px}
+.login-card{background:var(--card);border-radius:24px;padding:48px 40px;border:1px solid var(--border);box-shadow:0 25px 80px rgba(0,0,0,.5);text-align:center}
+.login-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 24px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.login-title{font-size:28px;font-weight:800;background:linear-gradient(135deg,var(--primary-light),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+.login-subtitle{color:var(--text-secondary);font-size:14px;margin-bottom:32px}
+.login-form{display:flex;flex-direction:column;gap:16px}
+.login-input{width:100%;padding:16px 20px;border:2px solid var(--border);border-radius:14px;font-size:16px;background:var(--bg2);color:var(--text);transition:all .3s;font-family:inherit}
+.login-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(124,58,237,.2)}
+.login-input::placeholder{color:var(--text-muted)}
+.login-btn{width:100%;padding:16px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 8px 25px rgba(124,58,237,.4);transition:all .3s;position:relative;overflow:hidden}
+.login-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(124,58,237,.5)}
+.login-btn:active{transform:translateY(0)}
+.login-btn.loading{pointer-events:none;opacity:.8}
+.login-btn.loading::after{content:'';position:absolute;width:20px;height:20px;border:2px solid transparent;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;top:50%;left:50%;margin:-10px 0 0 -10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.login-error{color:var(--danger);font-size:13px;margin-top:8px;min-height:20px;transition:all .3s}
+.login-register{margin-top:20px;font-size:13px;color:var(--text-secondary)}
+.login-register a{color:var(--primary-light);cursor:pointer;text-decoration:none;font-weight:600}
+.login-register a:hover{text-decoration:underline}
+
+/* Welcome Screen */
+.welcome-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column}
+.welcome-overlay.show{display:flex}
+.welcome-avatar{width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:60px;opacity:0;transform:scale(0);transition:all .6s cubic-bezier(.34,1.56,.64,1);box-shadow:0 20px 60px rgba(124,58,237,.4)}
+.welcome-avatar.show{opacity:1;transform:scale(1)}
+.welcome-avatar.move-up{transform:scale(1) translateY(-30px)}
+.welcome-text{font-size:32px;font-weight:800;color:var(--text);margin-top:30px;opacity:0;transform:translateY(20px);transition:all .5s ease .3s}
+.welcome-text.show{opacity:1;transform:translateY(0)}
+.welcome-sub{font-size:16px;color:var(--text-secondary);margin-top:12px;opacity:0;transition:all .5s ease .5s}
+.welcome-sub.show{opacity:1}
+.welcome-loading{display:flex;align-items:center;gap:10px;margin-top:40px;opacity:0;transition:all .5s ease .7s;color:var(--text-muted);font-size:14px}
+.welcome-loading.show{opacity:1}
+.welcome-loading-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--primary-light);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.welcome-overlay.slide-up{animation:slideUpiOS .8s cubic-bezier(.23,1,.32,1) forwards}
+@keyframes slideUpiOS{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-100%);opacity:0}}
+
+/* User Menu */
+.user-menu{display:flex;align-items:center;gap:12px;cursor:pointer;padding:8px 12px;border-radius:12px;transition:all .3s;position:relative}
+.user-menu:hover{background:var(--bg2)}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.user-name{font-size:14px;font-weight:600;color:var(--text)}
+.user-dropdown{position:absolute;top:100%;right:0;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:8px;min-width:160px;box-shadow:0 10px 40px rgba(0,0,0,.4);display:none;z-index:101}
+.user-dropdown.show{display:block}
+.user-dropdown-item{padding:10px 16px;border-radius:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.user-dropdown-item:hover{background:var(--bg2);color:var(--text)}
+.user-dropdown-item.danger{color:var(--danger)}
+.user-dropdown-item.danger:hover{background:rgba(239,68,68,.1)}
 @font-face{font-family:'Inter';src:local('Inter')}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 50%,rgba(124,58,237,.08) 0%,transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(6,214,160,.06) 0%,transparent 50%);pointer-events:none;z-index:0}
@@ -255,9 +313,72 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 .sync-notification-icon{width:28px;height:28px;background:var(--success);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;flex-shrink:0}
 .sync-notification-text{font-size:14px;color:var(--text);font-weight:500}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Category Sidebar */
+.category-sidebar .btn{font-size:13px;padding:10px 12px;border-radius:8px;transition:all .2s}
+.category-sidebar .btn:hover{transform:translateX(4px)}
+.category-sidebar .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark))}
+.category-sidebar .btn-secondary{background:var(--bg2);border:1px solid var(--border)}
+.category-sidebar .btn-secondary:hover{border-color:var(--primary);background:var(--bg3)}
+
+/* Review Order Modal */
+.review-order-btn{flex:1;padding:24px 16px;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:12px;font-size:15px;font-weight:600;transition:all .3s;cursor:pointer;border:2px solid transparent}
+.review-order-btn:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,.2)}
+.review-order-btn.sequential{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff}
+.review-order-btn.random{background:linear-gradient(135deg,var(--accent),#059669);color:#fff}
+.review-order-icon{font-size:32px}
 </style>
 </head>
 <body>
+
+<!-- Login Page -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-container">
+    <div class="login-card" id="login-card">
+      <div class="login-logo">📚</div>
+      <h1 class="login-title">考研背诵系统</h1>
+      <p class="login-subtitle">登录后开始你的学习之旅</p>
+      <form class="login-form" id="login-form" onsubmit="handleLogin(event)">
+        <input type="text" class="login-input" id="login-username" placeholder="用户名" autocomplete="username" required>
+        <input type="password" class="login-input" id="login-password" placeholder="密码" autocomplete="current-password" required>
+        <button type="submit" class="login-btn" id="login-btn">登 录</button>
+      </form>
+      <div class="login-error" id="login-error"></div>
+      <div class="login-register">还没有账号？<a onclick="showRegister()">立即注册</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- Register Page -->
+<div class="login-overlay hidden" id="register-overlay">
+  <div class="login-container">
+    <div class="login-card" id="register-card">
+      <div class="login-logo">✨</div>
+      <h1 class="login-title">创建账号</h1>
+      <p class="login-subtitle">注册后即可管理你的背诵内容</p>
+      <form class="login-form" id="register-form" onsubmit="handleRegister(event)">
+        <input type="text" class="login-input" id="register-username" placeholder="用户名" autocomplete="username" required>
+        <input type="text" class="login-input" id="register-nickname" placeholder="昵称（如：小朱）">
+        <input type="password" class="login-input" id="register-password" placeholder="密码" autocomplete="new-password" required>
+        <input type="password" class="login-input" id="register-confirm" placeholder="确认密码" autocomplete="new-password" required>
+        <button type="submit" class="login-btn" id="register-btn">注 册</button>
+      </form>
+      <div class="login-error" id="register-error"></div>
+      <div class="login-register">已有账号？<a onclick="showLogin()">返回登录</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome Screen -->
+<div class="welcome-overlay" id="welcome-overlay">
+  <div class="welcome-avatar" id="welcome-avatar">👤</div>
+  <div class="welcome-text" id="welcome-text"></div>
+  <div class="welcome-sub" id="welcome-sub">准备开始今天的学习吧</div>
+  <div class="welcome-loading" id="welcome-loading">
+    <div class="welcome-loading-spinner"></div>
+    <span>正在加载数据...</span>
+  </div>
+</div>
 
 <nav class="nav">
   <div class="nav-inner">
@@ -270,7 +391,14 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
     </div>
     <div style="display:flex;align-items:center;gap:12px">
       <span id="data-source-badge" style="font-size:12px;color:var(--text-muted);padding:6px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border);transition:all .3s" title="数据来源">⏳ 检测中...</span>
-      <button class="btn btn-sm btn-secondary" onclick="exportConfigJSON()">💾 保存到文件</button>
+      <div class="user-menu" id="user-menu" onclick="toggleUserMenu(event)">
+        <div class="user-avatar" id="nav-avatar">👤</div>
+        <span class="user-name" id="nav-username"></span>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-item" onclick="showSettings()">⚙️ 设置</div>
+          <div class="user-dropdown-item danger" onclick="handleLogout()">🚪 退出登录</div>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -364,11 +492,26 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   <!-- Review -->
   <div id="section-review" class="section">
     <div class="review-container">
-      <div id="review-empty" class="empty-state">
-        <div class="empty-state-icon">🎉</div>
-        <div class="empty-state-text">今日复习已完成！</div>
-        <div class="empty-state-sub">所有内容都已复习，明天继续加油</div>
-        <button class="btn btn-primary" style="margin-top:24px" onclick="showSection('manage',document.querySelectorAll('.nav-link')[3])">添加更多内容</button>
+      <div id="review-category-select" style="width:100%;max-width:560px">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <div class="card-title">选择复习分类</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <button class="btn btn-primary" onclick="startReviewByCategory('')" style="width:100%;justify-content:center;padding:16px">
+              📚 全部内容 <span id="review-all-count" style="opacity:.7;margin-left:8px">(0)</span>
+            </button>
+            <div id="review-category-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          </div>
+        </div>
+      </div>
+      <div id="review-empty" style="display:none">
+        <div class="empty-state">
+          <div class="empty-state-icon">🎉</div>
+          <div class="empty-state-text">今日复习已完成！</div>
+          <div class="empty-state-sub">所有内容都已复习，明天继续加油</div>
+          <button class="btn btn-primary" style="margin-top:24px" onclick="showSection('manage',document.querySelectorAll('.nav-link')[3])">添加更多内容</button>
+        </div>
       </div>
       <div id="review-active" style="display:none;width:100%;max-width:560px">
         <div class="review-stats">
@@ -403,6 +546,9 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
           <button class="btn btn-blurry" onclick="markCard('blurry')">🤔 模糊</button>
           <button class="btn btn-mastered" onclick="markCard('mastered')">😎 熟练</button>
         </div>
+        <div style="text-align:center;margin-top:16px">
+          <button class="btn btn-secondary btn-sm" onclick="backToCategorySelect()">← 返回分类选择</button>
+        </div>
       </div>
     </div>
   </div>
@@ -431,7 +577,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
       <div class="calendar-sidebar">
         <div class="calendar-sidebar-header">
           <div class="calendar-sidebar-title">📋 任务列表</div>
-          <div class="calendar-date-badge" id="calendar-selected-date">今天</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="calendar-date-badge" id="calendar-selected-date">今天</div>
+            <button class="btn btn-sm" id="btn-back-today" onclick="goToday()" style="display:none;padding:7px 14px;font-size:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(6,214,160,.3)">📅 今天</button>
+          </div>
         </div>
         <div class="calendar-task-list" id="calendar-task-list"></div>
       </div>
@@ -440,25 +589,55 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 
   <!-- Manage -->
   <div id="section-manage" class="section">
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">内容管理</div>
-        <div class="btn-group">
-          <button class="btn btn-primary" onclick="showAddModal()">➕ 添加内容</button>
-          <button class="btn btn-secondary" onclick="showImportModal()">📥 导入</button>
-          <button class="btn btn-secondary" onclick="exportJSON()">📤 导出</button>
+    <div style="display:flex;gap:20px">
+      <div style="width:220px;flex-shrink:0">
+        <div class="card" style="position:sticky;top:80px">
+          <div class="card-header">
+            <div class="card-title">分类</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="manage-category-list">
+            <button class="btn btn-primary" onclick="filterByCategory('')" style="width:100%;justify-content:flex-start">📚 全部内容</button>
+          </div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <div style="display:flex;gap:8px">
+              <input type="text" class="form-input" id="new-category-input" placeholder="新分类名称" style="padding:8px 12px;font-size:13px">
+              <button class="btn btn-sm btn-primary" onclick="addCategoryFromSidebar()">添加</button>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" placeholder="搜索内容..." oninput="filterContent(this.value)">
+      <div style="flex:1;min-width:0">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">内容管理</div>
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="showAddModal()">➕ 添加内容</button>
+              <button class="btn btn-secondary" onclick="showImportModal()">📥 导入</button>
+              <button class="btn btn-secondary" onclick="exportJSON()">📤 导出</button>
+            </div>
+          </div>
+          <div id="batch-actions" style="display:none;margin-bottom:16px;padding:12px;background:var(--bg2);border-radius:10px;align-items:center;gap:12px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="select-all" onchange="toggleSelectAll()"> 全选
+            </label>
+            <span id="selected-count" style="color:var(--text-secondary);font-size:13px">已选 0 项</span>
+            <button class="btn btn-sm btn-danger" onclick="batchDelete()">🗑️ 批量删除</button>
+            <button class="btn btn-sm btn-secondary" onclick="batchMoveCategory()">📂 批量分类</button>
+            <button class="btn btn-sm btn-secondary" onclick="cancelBatch()">取消</button>
+          </div>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="搜索内容..." oninput="filterContent(this.value)">
+          </div>
+          <div class="tabs">
+            <button class="tab active" onclick="filterByType('all',this)">全部</button>
+            <button class="tab" onclick="filterByType('flashcard',this)">闪卡</button>
+            <button class="tab" onclick="filterByType('paragraph',this)">段落</button>
+            <button class="tab" onclick="startBatchMode()" style="margin-left:auto;background:var(--warning);color:#fff">☑️ 批量管理</button>
+          </div>
+          <div class="content-list" id="content-list"></div>
+        </div>
       </div>
-      <div class="tabs">
-        <button class="tab active" onclick="filterByType('all',this)">全部</button>
-        <button class="tab" onclick="filterByType('flashcard',this)">闪卡</button>
-        <button class="tab" onclick="filterByType('paragraph',this)">段落</button>
-      </div>
-      <div class="content-list" id="content-list"></div>
     </div>
   </div>
 </div>
@@ -471,6 +650,16 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
       <button class="modal-close" onclick="closeModal('modal-add')">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">分类</label>
+        <div style="display:flex;gap:10px">
+          <select class="form-select" id="add-category" style="flex:1">
+            <option value="">未分类</option>
+          </select>
+          <input type="text" class="form-input" id="add-new-category" placeholder="新建分类" style="width:150px">
+          <button class="btn btn-sm btn-secondary" onclick="addCategory('add-category','add-new-category')">添加</button>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">类型</label>
         <select class="form-select" id="add-type" onchange="toggleContentType()">
@@ -504,17 +693,76 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
     <div class="modal-body">
       <div class="tabs" style="margin-bottom:20px">
         <button class="tab active" onclick="switchImportTab('file',this)">📁 文件导入</button>
+        <button class="tab" onclick="switchImportTab('excel',this)">📊 表格导入</button>
         <button class="tab" onclick="switchImportTab('text',this)">📝 文本导入</button>
         <button class="tab" onclick="switchImportTab('json',this)">💾 JSON恢复</button>
       </div>
       <div id="import-file">
+        <div class="form-group">
+          <label class="form-label">导入分类</label>
+          <div style="display:flex;gap:10px">
+            <select class="form-select" id="import-file-category" style="flex:1">
+              <option value="">未分类</option>
+            </select>
+            <input type="text" class="form-input" id="import-file-new-category" placeholder="新建分类" style="width:150px">
+            <button class="btn btn-sm btn-secondary" onclick="addCategory('import-file-category','import-file-new-category')">添加</button>
+          </div>
+        </div>
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
           <div class="drop-zone-icon">📂</div>
           <div class="drop-zone-text">点击或拖拽文件到此处<br>支持 <strong>TXT</strong>、<strong>CSV</strong> 格式</div>
         </div>
         <input type="file" id="file-input" accept=".txt,.csv" style="display:none" onchange="handleFileImport(event)">
       </div>
+      <div id="import-excel" style="display:none">
+        <div class="form-group">
+          <label class="form-label">导入分类</label>
+          <div style="display:flex;gap:10px">
+            <select class="form-select" id="import-excel-category" style="flex:1">
+              <option value="">未分类</option>
+            </select>
+            <input type="text" class="form-input" id="import-excel-new-category" placeholder="新建分类" style="width:150px">
+            <button class="btn btn-sm btn-secondary" onclick="addCategory('import-excel-category','import-excel-new-category')">添加</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">列映射</label>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1">
+              <label style="font-size:12px;color:var(--text-muted)">单词列（英文）</label>
+              <select class="form-select" id="excel-col-word">
+                <option value="0">A列</option>
+                <option value="1">B列</option>
+                <option value="2">C列</option>
+              </select>
+            </div>
+            <div style="flex:1">
+              <label style="font-size:12px;color:var(--text-muted)">翻译列（中文）</label>
+              <select class="form-select" id="excel-col-meaning">
+                <option value="1">B列</option>
+                <option value="0">A列</option>
+                <option value="2">C列</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="drop-zone" onclick="document.getElementById('excel-file-input').click()">
+          <div class="drop-zone-icon">📊</div>
+          <div class="drop-zone-text">点击选择 <strong>Excel</strong> 文件<br>支持 <strong>.xlsx</strong>、<strong>.xls</strong> 格式</div>
+        </div>
+        <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleExcelImport(event)">
+      </div>
       <div id="import-text" style="display:none">
+        <div class="form-group">
+          <label class="form-label">导入分类</label>
+          <div style="display:flex;gap:10px">
+            <select class="form-select" id="import-text-category" style="flex:1">
+              <option value="">未分类</option>
+            </select>
+            <input type="text" class="form-input" id="import-text-new-category" placeholder="新建分类" style="width:150px">
+            <button class="btn btn-sm btn-secondary" onclick="addCategory('import-text-category','import-text-new-category')">添加</button>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">格式说明</label>
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.8;padding:12px;background:var(--bg2);border-radius:8px">
@@ -548,7 +796,7 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-import')">取消</button>
-      <button class="btn btn-primary" onclick="importFromText()">导入</button>
+      <button class="btn btn-primary" id="import-btn" onclick="importFromText()">导入</button>
     </div>
   </div>
 </div>
@@ -569,6 +817,79 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
   </div>
 </div>
 
+<!-- Review Order Modal -->
+<div class="modal-overlay" id="modal-review-order" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">选择复习顺序</div>
+      <button class="modal-close" onclick="closeModal('modal-review-order')">&times;</button>
+    </div>
+    <div class="modal-body" style="text-align:center;padding:32px 24px">
+      <p style="color:var(--text-secondary);margin-bottom:28px;font-size:15px">请选择复习卡片的顺序</p>
+      <div style="display:flex;gap:20px">
+        <button class="review-order-btn sequential" onclick="startReviewWithOrder('sequential')">
+          <span class="review-order-icon">📋</span>
+          <span>顺序复习</span>
+          <span style="font-size:12px;font-weight:400;opacity:.8">按添加顺序排列</span>
+        </button>
+        <button class="review-order-btn random" onclick="startReviewWithOrder('random')">
+          <span class="review-order-icon">🔀</span>
+          <span>乱序复习</span>
+          <span style="font-size:12px;font-weight:400;opacity:.8">随机打乱顺序</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Category Modal -->
+<div class="modal-overlay" id="modal-delete-category" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">删除分类</div>
+      <button class="modal-close" onclick="closeModal('modal-delete-category')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);margin-bottom:16px">选择要删除的分类：</p>
+      <div id="delete-category-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-delete-category')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="modal-settings" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">个人设置</div>
+      <button class="modal-close" onclick="closeModal('modal-settings')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:24px">
+        <div id="settings-avatar-preview" style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:inline-flex;align-items:center;justify-content:center;font-size:48px;cursor:pointer;position:relative;overflow:hidden" onclick="document.getElementById('avatar-file-input').click()">
+          <span id="settings-avatar-text">👤</span>
+          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);padding:6px;font-size:12px;color:#fff">更换头像</div>
+        </div>
+        <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">用户名</label>
+        <input type="text" class="form-input" id="settings-username" disabled style="opacity:.6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">昵称</label>
+        <input type="text" class="form-input" id="settings-nickname" placeholder="设置你的昵称">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-settings')">取消</button>
+      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="shortcut-hint">
   <span><span class="shortcut-key">Space</span> 翻转</span>
   <span><span class="shortcut-key">1</span> 遗忘</span>
@@ -580,15 +901,312 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 const STORAGE_KEY='recite_system_data';
 const HISTORY_KEY='recite_system_history';
 const LAST_SYNC_KEY='recite_last_sync';
-const CONFIG_FILE='config.json';
+const CONFIG_FILE='backup.json';
 let useConfigFile=false;
 let configData={cards:[],history:{}};
 let syncStatus='unknown';
 let serverAvailable=false;
+let currentUser=null;
+
+// ===== Auth Functions =====
+function getGreeting(){
+  const hour=new Date().getHours();
+  if(hour<6)return '夜深了，注意休息';
+  if(hour<9)return '早上好';
+  if(hour<12)return '上午好';
+  if(hour<14)return '中午好';
+  if(hour<18)return '下午好';
+  if(hour<22)return '晚上好';
+  return '夜深了，注意休息';
+}
+
+function getUserStorageKey(key){
+  return currentUser ? `${key}_${currentUser.id}` : key;
+}
+
+function checkLogin(){
+  const savedUser=localStorage.getItem('recite_current_user');
+  if(savedUser){
+    currentUser=JSON.parse(savedUser);
+    document.getElementById('login-overlay').classList.add('hidden');
+    document.getElementById('user-menu').style.display='flex';
+    updateUserInfo();
+    initConfig();
+    return true;
+  }
+  document.getElementById('user-menu').style.display='none';
+  return false;
+}
+
+function updateUserInfo(){
+  if(!currentUser)return;
+  const avatarEl=document.getElementById('nav-avatar');
+  const nameEl=document.getElementById('nav-username');
+  if(currentUser.avatar){
+    avatarEl.textContent='';
+    avatarEl.style.backgroundImage=`url(${currentUser.avatar})`;
+    avatarEl.style.backgroundSize='cover';
+  }else{
+    avatarEl.textContent=currentUser.nickname?currentUser.nickname[0]:'👤';
+  }
+  nameEl.textContent=currentUser.nickname||currentUser.username;
+}
+
+async function handleLogin(e){
+  e.preventDefault();
+  const username=document.getElementById('login-username').value.trim();
+  const password=document.getElementById('login-password').value;
+  const btn=document.getElementById('login-btn');
+  const errorEl=document.getElementById('login-error');
+  
+  if(!username||!password){
+    errorEl.textContent='请输入用户名和密码';
+    return;
+  }
+  
+  btn.classList.add('loading');
+  errorEl.textContent='';
+  
+  try{
+    const resp=await fetch('/api.php?action=login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+    const result=await resp.json();
+    
+    if(result.success){
+      currentUser=result.user;
+      localStorage.setItem('recite_current_user',JSON.stringify(currentUser));
+      showWelcomeAnimation();
+    }else{
+      errorEl.textContent=result.error||'登录失败';
+    }
+  }catch(e){
+    errorEl.textContent='无法连接到服务器';
+  }finally{
+    btn.classList.remove('loading');
+  }
+}
+
+async function handleRegister(e){
+  e.preventDefault();
+  const username=document.getElementById('register-username').value.trim();
+  const nickname=document.getElementById('register-nickname').value.trim();
+  const password=document.getElementById('register-password').value;
+  const confirm=document.getElementById('register-confirm').value;
+  const btn=document.getElementById('register-btn');
+  const errorEl=document.getElementById('register-error');
+  
+  if(!username||!password){
+    errorEl.textContent='请输入用户名和密码';
+    return;
+  }
+  if(password!==confirm){
+    errorEl.textContent='两次密码不一致';
+    return;
+  }
+  if(password.length<6){
+    errorEl.textContent='密码至少6位';
+    return;
+  }
+  
+  btn.classList.add('loading');
+  errorEl.textContent='';
+  
+  try{
+    const resp=await fetch('/api.php?action=register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password,nickname:nickname||username})
+    });
+    const result=await resp.json();
+    
+    if(result.success){
+      currentUser=result.user;
+      localStorage.setItem('recite_current_user',JSON.stringify(currentUser));
+      showWelcomeAnimation();
+    }else{
+      errorEl.textContent=result.error||'注册失败';
+    }
+  }catch(e){
+    errorEl.textContent='无法连接到服务器';
+  }finally{
+    btn.classList.remove('loading');
+  }
+}
+
+function showLogin(){
+  document.getElementById('register-overlay').classList.add('hidden');
+  document.getElementById('login-overlay').classList.remove('hidden');
+}
+
+function showRegister(){
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('register-overlay').classList.remove('hidden');
+}
+
+function showWelcomeAnimation(){
+  const welcomeOverlay=document.getElementById('welcome-overlay');
+  const avatarEl=document.getElementById('welcome-avatar');
+  const textEl=document.getElementById('welcome-text');
+  const subEl=document.getElementById('welcome-sub');
+  const loadingEl=document.getElementById('welcome-loading');
+  
+  if(currentUser.avatar){
+    avatarEl.textContent='';
+    avatarEl.style.backgroundImage=`url(${currentUser.avatar})`;
+    avatarEl.style.backgroundSize='cover';
+  }else{
+    avatarEl.textContent=currentUser.nickname?currentUser.nickname[0]:'👤';
+  }
+  
+  textEl.textContent=`${getGreeting()}，${currentUser.nickname||currentUser.username}`;
+  
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('register-overlay').classList.add('hidden');
+  
+  welcomeOverlay.classList.add('show');
+  
+  const dataLoadPromise=initConfig();
+  
+  setTimeout(()=>{
+    avatarEl.classList.add('show');
+    
+    setTimeout(()=>{
+      avatarEl.classList.add('move-up');
+      textEl.classList.add('show');
+      subEl.classList.add('show');
+      loadingEl.classList.add('show');
+      
+      dataLoadPromise.finally(()=>{
+        loadingEl.querySelector('span').textContent='加载完成';
+        loadingEl.querySelector('.welcome-loading-spinner').style.animation='none';
+        loadingEl.querySelector('.welcome-loading-spinner').style.borderColor='var(--success)';
+        loadingEl.querySelector('.welcome-loading-spinner').style.borderTopColor='var(--success)';
+        
+        setTimeout(()=>{
+          welcomeOverlay.classList.add('slide-up');
+          
+          setTimeout(()=>{
+            welcomeOverlay.classList.remove('show','slide-up');
+            avatarEl.classList.remove('show','move-up');
+            textEl.classList.remove('show');
+            subEl.classList.remove('show');
+            loadingEl.classList.remove('show');
+            loadingEl.querySelector('span').textContent='正在加载数据...';
+            loadingEl.querySelector('.welcome-loading-spinner').style.animation='';
+            loadingEl.querySelector('.welcome-loading-spinner').style.borderColor='';
+            loadingEl.querySelector('.welcome-loading-spinner').style.borderTopColor='';
+            
+            document.getElementById('user-menu').style.display='flex';
+            updateUserInfo();
+            showSection('dashboard',document.querySelector('.nav-link'));
+          },800);
+        },500);
+      });
+    },400);
+  },200);
+}
+
+function handleLogout(){
+  currentUser=null;
+  useConfigFile=false;
+  configData={cards:[],history:{}};
+  syncStatus='unknown';
+  localStorage.removeItem('recite_current_user');
+  document.getElementById('user-menu').style.display='none';
+  document.getElementById('user-dropdown').classList.remove('show');
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('login-username').value='';
+  document.getElementById('login-password').value='';
+  document.getElementById('login-error').textContent='';
+}
+
+function toggleUserMenu(e){
+  e.stopPropagation();
+  const dropdown=document.getElementById('user-dropdown');
+  dropdown.classList.toggle('show');
+}
+
+function showSettings(){
+  document.getElementById('user-dropdown').classList.remove('show');
+  document.getElementById('settings-username').value=currentUser.username;
+  document.getElementById('settings-nickname').value=currentUser.nickname||'';
+  
+  const avatarPreview=document.getElementById('settings-avatar-preview');
+  const avatarText=document.getElementById('settings-avatar-text');
+  if(currentUser.avatar){
+    avatarPreview.style.backgroundImage=`url(${currentUser.avatar})`;
+    avatarPreview.style.backgroundSize='cover';
+    avatarText.textContent='';
+  }else{
+    avatarPreview.style.backgroundImage='';
+    avatarText.textContent=currentUser.nickname?currentUser.nickname[0]:'👤';
+  }
+  
+  document.getElementById('modal-settings').style.display='flex';
+}
+
+function handleAvatarUpload(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  
+  if(file.size>2*1024*1024){
+    showToast('图片大小不能超过2MB');
+    return;
+  }
+  
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const dataUrl=ev.target.result;
+    
+    const avatarPreview=document.getElementById('settings-avatar-preview');
+    const avatarText=document.getElementById('settings-avatar-text');
+    avatarPreview.style.backgroundImage=`url(${dataUrl})`;
+    avatarPreview.style.backgroundSize='cover';
+    avatarText.textContent='';
+    
+    currentUser.avatar=dataUrl;
+    localStorage.setItem('recite_current_user',JSON.stringify(currentUser));
+    
+    updateUserInfo();
+    showToast('头像已更新');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveSettings(){
+  const nickname=document.getElementById('settings-nickname').value.trim();
+  if(!nickname){
+    showToast('昵称不能为空');
+    return;
+  }
+  
+  currentUser.nickname=nickname;
+  localStorage.setItem('recite_current_user',JSON.stringify(currentUser));
+  updateUserInfo();
+  closeModal('modal-settings');
+  showToast('设置已保存');
+  
+  try{
+    await fetch('/api.php?action=update-profile',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:currentUser.id,nickname,avatar:currentUser.avatar||''})
+    });
+  }catch(e){}
+}
+
+document.addEventListener('click',()=>{
+  document.getElementById('user-dropdown').classList.remove('show');
+});
 
 function getLocalData(){
-  const cards=localStorage.getItem(STORAGE_KEY);
-  const history=localStorage.getItem(HISTORY_KEY);
+  const cardsKey=getUserStorageKey(STORAGE_KEY);
+  const historyKey=getUserStorageKey(HISTORY_KEY);
+  const cards=localStorage.getItem(cardsKey);
+  const history=localStorage.getItem(historyKey);
   const lastSync=localStorage.getItem(LAST_SYNC_KEY);
   return{
     cards:cards?JSON.parse(cards):[],
@@ -598,8 +1216,10 @@ function getLocalData(){
 }
 
 function setLocalData(cards,history){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(cards));
-  localStorage.setItem(HISTORY_KEY,JSON.stringify(history));
+  const cardsKey=getUserStorageKey(STORAGE_KEY);
+  const historyKey=getUserStorageKey(HISTORY_KEY);
+  localStorage.setItem(cardsKey,JSON.stringify(cards));
+  localStorage.setItem(historyKey,JSON.stringify(history));
   localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());
 }
 
@@ -643,6 +1263,8 @@ function mergeData(configData,localData){
 }
 
 async function initConfig(){
+  if(!currentUser)return;
+  
   const localData=getLocalData();
   let configAvailable=false;
   let configDataRaw=null;
@@ -650,16 +1272,24 @@ async function initConfig(){
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),3000);
-    const resp=await fetch(CONFIG_FILE+'?t='+Date.now(),{signal:controller.signal});
+    const resp=await fetch('/api.php?action=load',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:currentUser.id}),
+      signal:controller.signal
+    });
     clearTimeout(timer);
     if(resp.ok){
-      configDataRaw=await resp.json();
-      if(configDataRaw.cards&&Array.isArray(configDataRaw.cards)){
-        configAvailable=true;
+      const result=await resp.json();
+      if(result.success&&result.data){
+        configDataRaw=result.data;
+        if(configDataRaw.cards&&Array.isArray(configDataRaw.cards)){
+          configAvailable=true;
+        }
       }
     }
   }catch(e){
-    console.log('config.json not found, using localStorage');
+    console.log('Server load failed, using localStorage');
   }
   
   if(configAvailable){
@@ -690,7 +1320,7 @@ async function initConfig(){
   
   setTimeout(()=>{
     if(syncStatus==='config_newer'||syncStatus==='config_loaded'){
-      showSyncNotification('已从 config.json 加载数据');
+      showSyncNotification('数据已加载');
     }else if(syncStatus==='merged'){
       showSyncNotification('数据已同步');
     }
@@ -719,10 +1349,10 @@ function updateDataSourceBadge(){
   if(!badge)return;
   
   const statusMap={
-    'config_newer':{text:'✓ 已启用数据同步',color:'var(--success)',title:'数据来自 config.json · 自动保存已启用'},
-    'config_loaded':{text:'✓ 已启用数据同步',color:'var(--success)',title:'数据来自 config.json · 自动保存已启用'},
-    'merged':{text:'🔄 已同步',color:'var(--accent)',title:'本地与文件数据已合并'},
-    'local_only':{text:'💾 浏览器存储',color:'var(--warning)',title:'数据存储在浏览器中，未找到 config.json'},
+    'config_newer':{text:'✓ 已连接数据库',color:'var(--success)',title:'数据已同步到MySQL数据库'},
+    'config_loaded':{text:'✓ 已连接数据库',color:'var(--success)',title:'数据已同步到MySQL数据库'},
+    'merged':{text:'🔄 已同步',color:'var(--accent)',title:'数据已合并同步'},
+    'local_only':{text:'💾 浏览器存储',color:'var(--warning)',title:'数据存储在浏览器中'},
     'empty':{text:'📝 空白状态',color:'var(--text-muted)',title:'暂无数据'},
     'unknown':{text:'⏳ 检测中...',color:'var(--text-muted)',title:'正在检测数据源'}
   };
@@ -736,34 +1366,39 @@ function updateDataSourceBadge(){
 
 function loadData(){
   if(useConfigFile)return configData.cards;
-  const d=localStorage.getItem(STORAGE_KEY);
+  const key=getUserStorageKey(STORAGE_KEY);
+  const d=localStorage.getItem(key);
   return d?JSON.parse(d):[];
 }
 
 function saveData(d){
   if(useConfigFile){configData.cards=d}
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(d));
+  const key=getUserStorageKey(STORAGE_KEY);
+  localStorage.setItem(key,JSON.stringify(d));
   localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());
   autoSaveToServer();
 }
 
 function loadHistory(){
   if(useConfigFile)return configData.history||{};
-  const d=localStorage.getItem(HISTORY_KEY);
+  const key=getUserStorageKey(HISTORY_KEY);
+  const d=localStorage.getItem(key);
   return d?JSON.parse(d):{};
 }
 
 function saveHistory(h){
   if(useConfigFile){configData.history=h}
-  localStorage.setItem(HISTORY_KEY,JSON.stringify(h));
+  const key=getUserStorageKey(HISTORY_KEY);
+  localStorage.setItem(key,JSON.stringify(h));
   localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());
   autoSaveToServer();
 }
 
 async function saveToServer(){
-  if(!useConfigFile)return false;
+  if(!useConfigFile||!currentUser)return false;
   try{
     const data={
+      userId:currentUser.id,
       version:1,
       exportDate:new Date().toISOString(),
       cards:configData.cards,
@@ -771,7 +1406,7 @@ async function saveToServer(){
     };
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),2000);
-    const resp=await fetch('/api/save',{
+    const resp=await fetch('/api.php?action=save',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(data),
@@ -789,23 +1424,6 @@ async function saveToServer(){
   }
 }
 
-function saveToFile(){
-  const data={
-    version:1,
-    exportDate:new Date().toISOString(),
-    cards:configData.cards,
-    history:configData.history
-  };
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='config.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());
-}
-
 let saveTimeout=null;
 let lastSaveNotification=0;
 
@@ -815,18 +1433,9 @@ function autoSaveToServer(){
   saveTimeout=setTimeout(async()=>{
     const ok=await saveToServer();
     const now=Date.now();
-    if(ok){
-      if(now-lastSaveNotification>5000){
-        lastSaveNotification=now;
-        showSyncNotification('数据已保存到 config.json','success');
-      }
-    }else{
-      // POST不可用，自动下载文件
-      saveToFile();
-      if(now-lastSaveNotification>5000){
-        lastSaveNotification=now;
-        showSyncNotification('config.json 已下载，请替换原文件','success');
-      }
+    if(ok&&now-lastSaveNotification>5000){
+      lastSaveNotification=now;
+      showSyncNotification('数据已保存','success');
     }
   },800);
 }
@@ -835,14 +1444,11 @@ async function saveAndNotify(){
   if(!useConfigFile)return;
   const ok=await saveToServer();
   if(ok){
-    showSyncNotification('数据已保存到 config.json','success');
-  }else{
-    saveToFile();
-    showSyncNotification('config.json 已下载，请替换原文件','success');
+    showSyncNotification('数据已保存','success');
   }
 }
 
-function exportConfigJSON(){
+function exportJSON(){
   const data={
     version:1,
     exportDate:new Date().toISOString(),
@@ -853,11 +1459,10 @@ function exportConfigJSON(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download=CONFIG_FILE;
+  a.download='backup.json';
   a.click();
   URL.revokeObjectURL(url);
-  localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());
-  showToast('已导出 config.json');
+  showToast('已导出备份文件');
 }
 
 function generateId(){return Date.now().toString(36)+Math.random().toString(36).substr(2,9)}
@@ -898,8 +1503,8 @@ function showSection(name,el){
   if(el)el.classList.add('active');
   if(name==='dashboard')updateDashboard();
   if(name==='review')initReview();
-  if(name==='manage')renderContentList();
-  if(name==='calendar')renderCalendar();
+  if(name==='manage'){renderManageCategoryList();renderContentList();}
+  if(name==='calendar'){calendarDate=new Date();selectedDate=new Date();renderCalendar();renderDayTasks(selectedDate);}
 }
 
 function updateDashboard(){
@@ -928,16 +1533,158 @@ function updateDashboard(){
 }
 
 let currentReviewCards=[],currentReviewIndex=0,isFlipped=false;
-function initReview(){
-  currentReviewCards=getDueCards();currentReviewIndex=0;isFlipped=false;
-  if(!currentReviewCards.length){
+async function initReview(){
+  const categoryList=document.getElementById('review-category-list');
+  const categories=await loadCategories();
+  const cards=loadData();
+  const allDueCards=getDueCards();
+  
+  document.getElementById('review-all-count').textContent=`(${allDueCards.length}张待复习)`;
+  
+  categoryList.innerHTML='';
+  categories.forEach(cat=>{
+    const catCards=cards.filter(c=>c.category===cat);
+    const catDueCards=allDueCards.filter(c=>c.category===cat);
+    if(catCards.length>0){
+      const btn=document.createElement('button');
+      btn.className='btn btn-secondary';
+      btn.style.cssText='width:100%;justify-content:space-between;padding:16px';
+      btn.innerHTML=`<span>📂 ${esc(cat)}</span><span style="opacity:.7">${catDueCards.length}张待复习</span>`;
+      btn.onclick=()=>startReviewByCategory(cat);
+      categoryList.appendChild(btn);
+    }
+  });
+  
+  document.getElementById('review-category-select').style.display='block';
+  document.getElementById('review-empty').style.display='none';
+  document.getElementById('review-active').style.display='none';
+}
+
+let pendingReviewCategory='';
+function startReviewByCategory(category){
+  const cards=category?loadData().filter(c=>c.category===category):getDueCards();
+  
+  if(cards.length===0){
+    document.getElementById('review-category-select').style.display='none';
     document.getElementById('review-empty').style.display='block';
     document.getElementById('review-active').style.display='none';
-  }else{
-    document.getElementById('review-empty').style.display='none';
-    document.getElementById('review-active').style.display='block';
-    showCurrentCard();
+    return;
   }
+  
+  pendingReviewCategory=category;
+  pendingReviewCards=[...cards];
+  document.getElementById('modal-review-order').style.display='flex';
+}
+
+let pendingReviewCards=[];
+function startReviewWithOrder(order){
+  closeModal('modal-review-order');
+  
+  currentReviewCards=[...pendingReviewCards];
+  if(order==='random'){
+    for(let i=currentReviewCards.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [currentReviewCards[i],currentReviewCards[j]]=[currentReviewCards[j],currentReviewCards[i]];
+    }
+  }
+  
+  currentReviewIndex=0;
+  isFlipped=false;
+  
+  document.getElementById('review-category-select').style.display='none';
+  document.getElementById('review-empty').style.display='none';
+  document.getElementById('review-active').style.display='block';
+  showCurrentCard();
+}
+
+let currentManageCategory='';
+async function filterByCategory(category){
+  currentManageCategory=category;
+  await renderManageCategoryList();
+  renderContentList();
+}
+
+async function renderManageCategoryList(){
+  const categories=await loadCategories();
+  const list=document.getElementById('manage-category-list');
+  
+  let html=`<button class="btn ${currentManageCategory===''?'btn-primary':'btn-secondary'}" onclick="filterByCategory('')" style="width:100%;justify-content:flex-start">📚 全部内容</button>`;
+  
+  categories.forEach(cat=>{
+    html+=`<div style="display:flex;gap:4px">
+      <button class="btn ${currentManageCategory===cat?'btn-primary':'btn-secondary'}" onclick="filterByCategory('${esc(cat)}')" style="flex:1;justify-content:flex-start;font-size:13px">📂 ${esc(cat)}</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteCategory('${esc(cat)}')" style="padding:6px 10px" title="删除分类">×</button>
+    </div>`;
+  });
+  
+  list.innerHTML=html;
+}
+
+async function addCategoryFromSidebar(){
+  const input=document.getElementById('new-category-input');
+  const name=input.value.trim();
+  if(!name){showToast('请输入分类名称');return}
+  
+  const categories=await loadCategories();
+  if(categories.includes(name)){showToast('分类已存在');return}
+  
+  categories.push(name);
+  await saveCategories(categories);
+  
+  input.value='';
+  showToast('分类已添加');
+  await renderManageCategoryList();
+  await updateCategorySelects();
+}
+
+async function deleteCategory(category){
+  if(!confirm(`确定要删除分类"${category}"吗？\n注意：这不会删除该分类下的内容。`))return;
+  
+  let categories=await loadCategories();
+  categories=categories.filter(c=>c!==category);
+  await saveCategories(categories);
+  
+  showToast('分类已删除');
+  await renderManageCategoryList();
+  await updateCategorySelects();
+}
+
+async function showDeleteCategoryModal(){
+  const categories=await loadCategories();
+  const list=document.getElementById('delete-category-list');
+  
+  if(categories.length===0){
+    list.innerHTML='<p style="color:var(--text-muted);text-align:center">暂无分类</p>';
+  }else{
+    list.innerHTML=categories.map(cat=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg2);border-radius:8px">
+        <span>📂 ${esc(cat)}</span>
+        <button class="btn btn-sm btn-danger" onclick="deleteCategoryFromModal('${esc(cat)}')">删除</button>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('modal-delete-category').style.display='flex';
+}
+
+async function deleteCategoryFromModal(category){
+  if(!confirm(`确定要删除分类"${category}"吗？`))return;
+  
+  let categories=await loadCategories();
+  categories=categories.filter(c=>c!==category);
+  await saveCategories(categories);
+  
+  showToast('分类已删除');
+  await showDeleteCategoryModal();
+  await renderManageCategoryList();
+  await updateCategorySelects();
+}
+
+function backToCategorySelect(){
+  document.getElementById('review-category-select').style.display='block';
+  document.getElementById('review-empty').style.display='none';
+  document.getElementById('review-active').style.display='none';
+  initReview();
 }
 
 function startReview(){
@@ -979,28 +1726,129 @@ async function markCard(quality){
   if(useConfigFile){await saveToServer()}
 }
 
-let currentFilter='all',searchQuery='';
+let currentFilter='all',searchQuery='',batchMode=false,selectedCards=new Set();
+
+function startBatchMode(){
+  batchMode=true;
+  selectedCards.clear();
+  document.getElementById('batch-actions').style.display='flex';
+  renderContentList();
+}
+
+function cancelBatch(){
+  batchMode=false;
+  selectedCards.clear();
+  document.getElementById('batch-actions').style.display='none';
+  document.getElementById('select-all').checked=false;
+  renderContentList();
+}
+
+function toggleSelectAll(){
+  const checked=document.getElementById('select-all').checked;
+  const cards=loadData();
+  let filtered=cards;
+  if(currentFilter!=='all')filtered=filtered.filter(c=>c.type===currentFilter);
+  if(searchQuery){const q=searchQuery.toLowerCase();filtered=filtered.filter(c=>c.front.toLowerCase().includes(q)||c.back.toLowerCase().includes(q))}
+  
+  if(checked){
+    filtered.forEach(c=>selectedCards.add(c.id));
+  }else{
+    selectedCards.clear();
+  }
+  updateSelectedCount();
+  renderContentList();
+}
+
+function toggleCardSelect(id,checked){
+  if(checked){
+    selectedCards.add(id);
+  }else{
+    selectedCards.delete(id);
+  }
+  updateSelectedCount();
+}
+
+function updateSelectedCount(){
+  document.getElementById('selected-count').textContent=`已选 ${selectedCards.size} 项`;
+}
+
+async function batchDelete(){
+  console.log('batchDelete called, selectedCards:', Array.from(selectedCards));
+  if(selectedCards.size===0){showToast('请先选择要删除的内容');return}
+  if(!confirm(`确定要删除选中的 ${selectedCards.size} 项内容吗？`))return;
+  
+  const ids=Array.from(selectedCards);
+  console.log('Deleting IDs:', ids);
+  
+  // 尝试使用API批量删除
+  try{
+    const resp=await fetch('/api.php?action=batch-delete',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:currentUser.id,cardIds:ids})
+    });
+    const result=await resp.json();
+    console.log('Batch delete result:', result);
+    if(!result.success)throw new Error(result.error);
+  }catch(e){
+    console.log('Batch delete error, falling back to local:', e);
+    // 降级为本地删除
+    const cards=loadData().filter(c=>!selectedCards.has(c.id));
+    saveData(cards);
+  }
+  
+  showToast(`已删除 ${ids.length} 项内容`);
+  cancelBatch();
+  renderContentList();
+  updateDashboard();
+}
+
+async function batchMoveCategory(){
+  console.log('batchMoveCategory called, selectedCards:', Array.from(selectedCards));
+  if(selectedCards.size===0){showToast('请先选择要分类的内容');return}
+  
+  const categories=await loadCategories();
+  console.log('Loaded categories:', categories);
+  const category=prompt('输入分类名称（留空取消）：\n已有分类：'+categories.join(', '));
+  if(!category)return;
+  
+  const cards=loadData();
+  cards.forEach(c=>{
+    if(selectedCards.has(c.id)){
+      c.category=category;
+    }
+  });
+  saveData(cards);
+  
+  showToast(`已将 ${selectedCards.size} 项内容分类到 "${category}"`);
+  cancelBatch();
+  renderContentList();
+}
+
 function renderContentList(){
   const cards=loadData();const list=document.getElementById('content-list');
   let filtered=cards;
+  if(currentManageCategory)filtered=filtered.filter(c=>c.category===currentManageCategory);
   if(currentFilter!=='all')filtered=filtered.filter(c=>c.type===currentFilter);
   if(searchQuery){const q=searchQuery.toLowerCase();filtered=filtered.filter(c=>c.front.toLowerCase().includes(q)||c.back.toLowerCase().includes(q))}
   if(!filtered.length){list.innerHTML='<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">暂无内容</div><div class="empty-state-sub">点击上方按钮添加背诵内容</div></div>';return}
   list.innerHTML=filtered.map(c=>`
     <div class="content-item">
-      <div class="content-info" onclick="viewContent('${c.id}')">
+      ${batchMode?`<input type="checkbox" ${selectedCards.has(c.id)?'checked':''} onchange="toggleCardSelect('${c.id}',this.checked)" style="margin-right:12px">`:''}
+      <div class="content-info" onclick="${batchMode?`toggleCardSelect('${c.id}',!selectedCards.has('${c.id}'))`:`viewContent('${c.id}')`}">
         <div class="content-title">${esc(c.front)}</div>
         <div class="content-meta">
           <span class="content-badge ${c.type==='flashcard'?'badge-flashcard':'badge-paragraph'}">${c.type==='flashcard'?'闪卡':'段落'}</span>
+          ${c.category?`<span class="content-badge badge-box">${esc(c.category)}</span>`:''}
           <span class="content-badge badge-box">Box ${c.box}</span>
           <span>复习 ${c.reviewCount||0} 次</span>
           <span>${c.lastReview?formatDate(c.lastReview):'未复习'}</span>
         </div>
       </div>
-      <div class="btn-group">
+      ${batchMode?'':`<div class="btn-group">
         <button class="btn btn-sm btn-secondary" onclick="editContent('${c.id}')">编辑</button>
         <button class="btn btn-sm btn-danger" onclick="deleteContent('${c.id}')">删除</button>
-      </div>
+      </div>`}
     </div>`).join('');
 }
 
@@ -1008,18 +1856,14 @@ function filterByType(t,btn){currentFilter=t;document.querySelectorAll('.tabs .t
 function filterContent(q){searchQuery=q;renderContentList()}
 
 let editingId=null;
-function showAddModal(){
-  editingId=null;document.getElementById('modal-add-title').textContent='添加内容';
-  document.getElementById('add-type').value='flashcard';
-  document.getElementById('add-front').value='';document.getElementById('add-back').value='';
-  toggleContentType();document.getElementById('modal-add').style.display='flex';
-}
 
-function editContent(id){
+async function editContent(id){
   const cards=loadData();const c=cards.find(x=>x.id===id);if(!c)return;
   editingId=id;document.getElementById('modal-add-title').textContent='编辑内容';
   document.getElementById('add-type').value=c.type;
   document.getElementById('add-front').value=c.front;document.getElementById('add-back').value=c.back;
+  await updateCategorySelects();
+  document.getElementById('add-category').value=c.category||'';
   toggleContentType();document.getElementById('modal-add').style.display='flex';
 }
 
@@ -1027,18 +1871,19 @@ async function saveContent(){
   const type=document.getElementById('add-type').value;
   const front=document.getElementById('add-front').value.trim();
   const back=document.getElementById('add-back').value.trim();
+  const category=document.getElementById('add-category').value;
   if(!front||!back){showToast('请填写完整内容');return}
   const cards=loadData();
-  if(editingId){const i=cards.findIndex(c=>c.id===editingId);if(i!==-1){cards[i].front=front;cards[i].back=back;cards[i].type=type}}
-  else{cards.push({id:generateId(),type,front,back,box:1,nextReview:null,lastReview:null,reviewCount:0,createdAt:Date.now()})}
-  saveData(cards);closeModal('modal-add');renderContentList();
+  if(editingId){const i=cards.findIndex(c=>c.id===editingId);if(i!==-1){cards[i].front=front;cards[i].back=back;cards[i].type=type;cards[i].category=category}}
+  else{cards.push({id:generateId(),type,front,back,box:1,category:category,nextReview:null,lastReview:null,reviewCount:0,createdAt:Date.now()})}
+  saveData(cards);closeModal('modal-add');renderContentList();updateDashboard();
   if(useConfigFile){await saveAndNotify()}
   else{showToast(editingId?'内容已更新':'内容已添加')}
 }
 
 async function deleteContent(id){
   if(!confirm('确定要删除这条内容吗？'))return;
-  saveData(loadData().filter(c=>c.id!==id));renderContentList();
+  saveData(loadData().filter(c=>c.id!==id));renderContentList();updateDashboard();
   if(useConfigFile){await saveAndNotify()}
   else{showToast('内容已删除')}
 }
@@ -1068,33 +1913,81 @@ function viewContent(id){
 
 function toggleContentType(){document.getElementById('add-front-group').style.display='block'}
 
-function showImportModal(){document.getElementById('modal-import').style.display='flex';document.getElementById('import-textarea').value=''}
-function switchImportTab(t,btn){document.querySelectorAll('#modal-import .tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');['file','text','json'].forEach(x=>document.getElementById('import-'+x).style.display=x===t?'block':'none')}
+function switchImportTab(t,btn){document.querySelectorAll('#modal-import .tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');['file','excel','text','json'].forEach(x=>document.getElementById('import-'+x).style.display=x===t?'block':'none')}
 
 function handleFileImport(e){
   const file=e.target.files[0];if(!file)return;
+  const category=document.getElementById('import-file-category').value;
   const reader=new FileReader();
-  reader.onload=ev=>{const c=ev.target.result;file.name.endsWith('.csv')?importFlashcards(c):importParagraphs(c)};
+  reader.onload=ev=>{const c=ev.target.result;file.name.endsWith('.csv')?importFlashcards(c,category):importParagraphs(c,category)};
   reader.readAsText(file);
 }
 
 function importFromText(){
   const type=document.getElementById('import-type').value;
   const text=document.getElementById('import-textarea').value;
+  const category=document.getElementById('import-text-category').value;
   if(!text.trim()){showToast('请输入要导入的内容');return}
-  type==='flashcard'?importFlashcards(text):importParagraphs(text);
+  type==='flashcard'?importFlashcards(text,category):importParagraphs(text,category);
 }
 
-function importFlashcards(content){
+function importFlashcards(content,category=''){
   const lines=content.split('\n').filter(l=>l.trim());const cards=loadData();let count=0;
-  lines.forEach(line=>{const p=line.split('|');if(p.length>=2){cards.push({id:generateId(),type:'flashcard',front:p[0].trim(),back:p.slice(1).join('|').trim(),box:1,nextReview:null,lastReview:null,reviewCount:0,createdAt:Date.now()});count++}});
-  saveData(cards);closeModal('modal-import');renderContentList();showToast('成功导入 '+count+' 条闪卡');
+  lines.forEach(line=>{const p=line.split('|');if(p.length>=2){cards.push({id:generateId(),type:'flashcard',front:p[0].trim(),back:p.slice(1).join('|').trim(),box:1,category:category,nextReview:null,lastReview:null,reviewCount:0,createdAt:Date.now()});count++}});
+  saveData(cards);closeModal('modal-import');renderContentList();updateDashboard();showToast('成功导入 '+count+' 条闪卡');
 }
 
-function importParagraphs(content){
+function importParagraphs(content,category=''){
   const lines=content.split('\n').filter(l=>l.trim());const cards=loadData();let count=0;
-  lines.forEach(line=>{const t=line.trim();if(t){cards.push({id:generateId(),type:'paragraph',front:t.substring(0,50)+(t.length>50?'...':''),back:t,box:1,nextReview:null,lastReview:null,reviewCount:0,createdAt:Date.now()});count++}});
-  saveData(cards);closeModal('modal-import');renderContentList();showToast('成功导入 '+count+' 条段落');
+  lines.forEach(line=>{const t=line.trim();if(t){cards.push({id:generateId(),type:'paragraph',front:t.substring(0,50)+(t.length>50?'...':''),back:t,box:1,category:category,nextReview:null,lastReview:null,reviewCount:0,createdAt:Date.now()});count++}});
+  saveData(cards);closeModal('modal-import');renderContentList();updateDashboard();showToast('成功导入 '+count+' 条段落');
+}
+
+function handleExcelImport(e){
+  const file=e.target.files[0];if(!file)return;
+  const category=document.getElementById('import-excel-category').value;
+  const colWord=parseInt(document.getElementById('excel-col-word').value);
+  const colMeaning=parseInt(document.getElementById('excel-col-meaning').value);
+  
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const data=new Uint8Array(ev.target.result);
+    const workbook=XLSX.read(data,{type:'array'});
+    const firstSheet=workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData=XLSX.utils.sheet_to_json(firstSheet,{header:1});
+    
+    const cards=loadData();
+    let count=0;
+    
+    jsonData.forEach(row=>{
+      if(row.length>Math.max(colWord,colMeaning)){
+        const word=row[colWord]?String(row[colWord]).trim():'';
+        const meaning=row[colMeaning]?String(row[colMeaning]).trim():'';
+        if(word&&meaning){
+          cards.push({
+            id:generateId(),
+            type:'flashcard',
+            front:word,
+            back:meaning,
+            box:1,
+            category:category,
+            nextReview:null,
+            lastReview:null,
+            reviewCount:0,
+            createdAt:Date.now()
+          });
+          count++;
+        }
+      }
+    });
+    
+    saveData(cards);
+    closeModal('modal-import');
+    renderContentList();
+    updateDashboard();
+    showToast('成功导入 '+count+' 个单词');
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 function handleJSONImport(e){
@@ -1112,10 +2005,91 @@ function handleJSONImport(e){
         else{saveData(data)}
       }
       else{showToast('JSON 格式不正确');return}
-      closeModal('modal-import');renderContentList();showToast('JSON 数据已恢复');
+      closeModal('modal-import');renderContentList();updateDashboard();showToast('JSON 数据已恢复');
     }catch(err){showToast('JSON 解析失败')}
   };
   reader.readAsText(file);
+}
+
+const CATEGORIES_KEY='recite_categories';
+async function loadCategories(){
+  if(!currentUser)return [];
+  try{
+    const resp=await fetch('/api.php?action=load-categories',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:currentUser.id})
+    });
+    const result=await resp.json();
+    if(result.success)return result.categories;
+  }catch(e){}
+  return [];
+}
+
+async function saveCategories(categories){
+  if(!currentUser)return;
+  try{
+    await fetch('/api.php?action=save-categories',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:currentUser.id,categories})
+    });
+  }catch(e){}
+}
+
+async function addCategory(selectId,inputId){
+  const input=document.getElementById(inputId);
+  const name=input.value.trim();
+  if(!name){showToast('请输入分类名称');return}
+  
+  const categories=await loadCategories();
+  if(categories.includes(name)){showToast('分类已存在');return}
+  
+  categories.push(name);
+  await saveCategories(categories);
+  
+  const select=document.getElementById(selectId);
+  const option=document.createElement('option');
+  option.value=name;
+  option.textContent=name;
+  select.appendChild(option);
+  select.value=name;
+  
+  input.value='';
+  showToast('分类已添加');
+}
+
+async function updateCategorySelects(){
+  const categories=await loadCategories();
+  const selects=['add-category','import-file-category','import-excel-category','import-text-category'];
+  
+  selects.forEach(selectId=>{
+    const select=document.getElementById(selectId);
+    if(!select)return;
+    const currentValue=select.value;
+    select.innerHTML='<option value="">未分类</option>';
+    categories.forEach(cat=>{
+      const option=document.createElement('option');
+      option.value=cat;
+      option.textContent=cat;
+      select.appendChild(option);
+    });
+    select.value=currentValue;
+  });
+}
+
+async function showImportModal(){
+  document.getElementById('modal-import').style.display='flex';
+  document.getElementById('import-textarea').value='';
+  await updateCategorySelects();
+}
+
+async function showAddModal(){
+  editingId=null;document.getElementById('modal-add-title').textContent='添加内容';
+  document.getElementById('add-type').value='flashcard';
+  document.getElementById('add-front').value='';document.getElementById('add-back').value='';
+  await updateCategorySelects();
+  toggleContentType();document.getElementById('modal-add').style.display='flex';
 }
 
 function exportJSON(){exportConfigJSON()}
@@ -1147,12 +2121,14 @@ let selectedDate=new Date();
 const COMPLETED_KEY='recite_completed_cards';
 
 function getCompletedCards(){
-  const d=localStorage.getItem(COMPLETED_KEY);
+  const key=getUserStorageKey(COMPLETED_KEY);
+  const d=localStorage.getItem(key);
   return d?JSON.parse(d):{};
 }
 
 function saveCompletedCards(d){
-  localStorage.setItem(COMPLETED_KEY,JSON.stringify(d));
+  const key=getUserStorageKey(COMPLETED_KEY);
+  localStorage.setItem(key,JSON.stringify(d));
 }
 
 function toggleCardComplete(dateStr,cardId){
@@ -1273,14 +2249,17 @@ function renderDayTasks(date){
   const dateStr=date.toISOString().split('T')[0];
   const list=document.getElementById('calendar-task-list');
   const dateBadge=document.getElementById('calendar-selected-date');
+  const backTodayBtn=document.getElementById('btn-back-today');
   const completed=getCompletedCards();
   const dayCompleted=completed[dateStr]||{};
   
   const today=new Date();today.setHours(0,0,0,0);
   if(isSameDay(date,today)){
     dateBadge.textContent='今天';
+    backTodayBtn.style.display='none';
   }else{
     dateBadge.textContent=(date.getMonth()+1)+'月'+date.getDate()+'日';
+    backTodayBtn.style.display='inline-flex';
   }
   
   const cards=getCardsForDate(date);
@@ -1295,19 +2274,22 @@ function renderDayTasks(date){
   
   list.innerHTML=cards.map(card=>{
     const isChecked=dayCompleted[card.id];
-    return `<div class="calendar-task" onclick="toggleCardComplete('${dateStr}','${card.id}')">
-      <div class="calendar-task-check ${isChecked?'checked':''}"></div>
-      <div class="calendar-task-info">
-        <div class="calendar-task-title">${esc(card.front)}</div>
-        <div class="calendar-task-meta">Box ${card.box} · 复习 ${card.reviewCount||0} 次</div>
+    const backPreview=card.back.length>60?card.back.substring(0,60)+'...':card.back;
+    return `<div class="calendar-task" style="flex-direction:column;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:12px;width:100%">
+        <div class="calendar-task-check ${isChecked?'checked':''}" onclick="event.stopPropagation();toggleCardComplete('${dateStr}','${card.id}')"></div>
+        <div class="calendar-task-info" style="flex:1">
+          <div class="calendar-task-title">${esc(card.front)}</div>
+          <div class="calendar-task-meta">Box ${card.box} · 复习 ${card.reviewCount||0} 次</div>
+        </div>
+        <span class="calendar-task-badge ${card.type==='flashcard'?'badge-flashcard':'badge-paragraph'}">${card.type==='flashcard'?'闪卡':'段落'}</span>
       </div>
-      <span class="calendar-task-badge ${card.type==='flashcard'?'badge-flashcard':'badge-paragraph'}">${card.type==='flashcard'?'闪卡':'段落'}</span>
+      <div style="margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--text-secondary);line-height:1.5;width:calc(100% - 34px);margin-left:34px;cursor:pointer" onclick="viewContent('${card.id}')">${esc(backPreview)}</div>
     </div>`;
   }).join('');
 }
 
-updateDashboard();
-initConfig();
+checkLogin();
 </script>
 </body>
 </html>
